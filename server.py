@@ -25,3 +25,4 @@ if __name__ == "__main__":
     HOST, PORT = config.HOST, config.MAGIC_PORT
     server = SocketServer.UDPServer((HOST, PORT), UDPHandler)
     server.serve_forever()
+
