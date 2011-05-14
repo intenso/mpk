@@ -3,6 +3,7 @@
 
 import config
 import shlex, subprocess
+import logging
 import SocketServer
 
 def lockup(host, port):
@@ -10,14 +11,44 @@ def lockup(host, port):
     rule = "/sbin/iptables -I INPUT -p tcp -m state --state NEW,ESTABLISHED --dport %s --source %s -j ACCEPT" % (port, host)
     args = shlex.split(rule)
     subprocess.Popen(args)
-    
+
+def log(host, data):
+
+    logger = logging.getLogger('mpk')
+    logger.setLevel(logging.INFO)
+
+    # create file handler
+    fh = logging.FileHandler(config.LOGFILE)
+    fh.setLevel(logging.INFO)
+
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s %(message)s %(host)s %(data)s')
+    ch.setFormatter(formatter)
+    fh.setFormatter(formatter)
+
+    # add the handlers to logger
+    logger.addHandler(ch)
+    logger.addHandler(fh)
+
+    # shout out the message
+    d = { 'host' : host, 'data' : data }
+    logger.info('Port knocked by: ', extra=d)
+
+    # remove handlers until needed again
+    logger.removeHandler(ch)
+    logger.removeHandler(fh)
+
+
 class UDPHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
         data = self.request[0].strip()
         socket = self.request[1]
-        print "Knock-knock by: %s" % self.client_address[0]
-        print "Code word: %s" % data
+        log(self.client_address[0], data)
         if data == "ssh":
             lockup(self.client_address[0], 22)
             
