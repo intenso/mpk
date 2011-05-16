@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import config
-import shlex, subprocess
+import subprocess
 import logging
 import SocketServer
 
@@ -54,7 +54,6 @@ class UDPHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
         data = self.request[0].strip()
-        socket = self.request[1]
         log(self.client_address[0], data)
         if data == "ssh":
             lockup(self.client_address[0], 22)
