@@ -8,9 +8,16 @@ import SocketServer
 
 def lockup(host, port):
     """Allow port access from defined host """
-    rule = "/sbin/iptables -I INPUT -p tcp -m state --state NEW,ESTABLISHED --dport %s --source %s -j ACCEPT" % (port, host)
-    args = shlex.split(rule)
-    subprocess.Popen(args)
+    rule = ("/sbin/iptables",
+    "-I", "INPUT",
+    "-p", "tcp",
+    "-m", "state",
+    "--state", "NEW,ESTABLISHED",
+    "--dport", str(port),
+    "--source", host,
+    "-j", "ACCEPT",
+    )
+    subprocess.Popen(rule)
 
 def log(host, data):
 
