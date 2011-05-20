@@ -33,15 +33,22 @@ def lockup(host, port):
     "--source", host,
     "-j", "ACCEPT",
     )
-    subprocess.Popen(rule)
+    try:
+        subprocess.check_call(rule)
+        logger.info("Port %s opened for %s" % (port, host))
+    except:
+        logger.error("Iptables failed for port %s and host %s" % (port, host))
 
 class UDPHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
         data = self.request[0].strip()
-        logger.info("Port %s knocked by %s" % (data, self.client_address[0]))
+        host = self.client_address[0]
+        logger.info("Port %s knocked by %s" % (data, host))
         if data == "ssh":
-            lockup(self.client_address[0], 22)
+            lockup(host, 22)
+        else:
+            logger.warning("%s provided bad message: %s" % (host, data))
             
 if __name__ == "__main__":
     HOST, PORT = config.HOST, config.MAGIC_PORT
