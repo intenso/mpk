@@ -4,3 +4,4 @@
 HOST = '127.0.0.1'
 MAGIC_PORT = 1337
 LOGFILE = 'spam.log'
+LOCK_TIMER = 20

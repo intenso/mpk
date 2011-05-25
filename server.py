@@ -5,6 +5,8 @@ import config
 import subprocess
 import logging
 import SocketServer
+import time
+from threading import Thread
 
 logger = logging.getLogger('mpk')
 logger.setLevel(logging.DEBUG)
@@ -36,8 +38,38 @@ def lockup(host, port):
     try:
         subprocess.check_call(rule)
         logger.info("Port %s opened for %s" % (port, host))
+        timer = LockoutTimer(port, host)
+        timer.start()
     except:
         logger.error("Iptables failed for port %s and host %s" % (port, host))
+
+def lockout(port, host):
+    """Remove port access for defined host """
+    rule = ("/sbin/iptables",
+    "-D", "INPUT",
+    "-p", "tcp",
+    "-m", "state",
+    "--state", "NEW,ESTABLISHED",
+    "--dport", str(port),
+    "--source", host,
+    "-j", "ACCEPT",
+    )
+    try:
+        subprocess.check_call(rule)
+        logger.info("Lockup rule removed for port %s and host %s" % (port, host))
+    except:
+        logger.error("Iptables failed for port %s and host %s" % (port, host))
+
+class LockoutTimer(Thread):
+    def __init__ (self, port, host):
+        Thread.__init__(self)
+        self.timer = config.LOCK_TIMER
+        self.port = port
+        self.host = host
+    def run(self):
+        time.sleep(self.timer)
+        logger.debug("Lockout timer reached for port %s and host %s" % (self.port, self.host))
+        lockout(self.port, self.host)
 
 class UDPHandler(SocketServer.BaseRequestHandler):
 
